@@ -53,7 +53,7 @@ type TreeEnum = variant {
   Fork : Fork;
   Labeled : Labeled;
 };
-service : {
+service : (opt principal) -> {
   account_balance_pb : (AccountBalanceArgs) -> (ICPTs);
   block_pb : (nat64) -> (Block);
   get_certified_changes_since : (RegistryGetChangesSinceRequest) -> (

@@ -13,7 +13,7 @@ use std::convert::TryInto;
 use ic_cdk_macros::*;
 use ic_cdk::{export::{Principal, candid}, api};
 
-
+static mut LEDGER_ID: Option<Principal> = None;
 
 const CRC_LENGTH_IN_BYTES: usize = 4;
 
@@ -108,20 +108,30 @@ async fn get_certified_latest_version() -> CertifiedResponse {
 // identity
 // nns-ui
 
+#[init]
+fn init(ledger_id: Option<Principal>) {
+    unsafe {
+        LEDGER_ID = Some(ledger_id.unwrap_or(Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap()));
+    }
+}
+
 #[update]
 #[candid_method(update)]
 async fn account_balance_pb(account: AccountBalanceArgs) -> ICPTs {
-    let ledger: CanisterId = canister_from_str("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap();
+    unsafe {
+        let canister_id_str: String = LEDGER_ID.unwrap().to_text();
+        let ledger: CanisterId = canister_from_str(canister_id_str.as_str()).unwrap();
 
-    let result: Result<ICPTs, (Option<i32>, String)> = call_with_cleanup(
-        ledger,
-        "account_balance_pb",
-        protobuf,
-        account
-    )
-    .await;
+        let result: Result<ICPTs, (Option<i32>, String)> = call_with_cleanup(
+            ledger,
+            "account_balance_pb",
+            protobuf,
+            account
+        )
+        .await;
 
-    result.unwrap()
+        result.unwrap()
+    }
 }
 
 #[update]
@@ -142,18 +152,21 @@ async fn total_supply_pb() -> ICPTs {
 #[update]
 #[candid_method(update)]
 async fn block_pb(block_height: BlockHeight) -> Block {
-    let ledger: CanisterId = canister_from_str("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap();
-
-    let res: Result<BlockRes, (Option<i32>, String)> = call_with_cleanup(
-        ledger,
-        "block_pb",
-        protobuf,
-        block_height
-    )
-    .await;
-
-    let block = res.unwrap().0.unwrap().unwrap().decode().expect("unable to decode block");  
-    block
+    unsafe {
+        let canister_id_str: String = LEDGER_ID.unwrap().to_text();
+        let ledger: CanisterId = canister_from_str(canister_id_str.as_str()).unwrap();
+    
+        let res: Result<BlockRes, (Option<i32>, String)> = call_with_cleanup(
+            ledger,
+            "block_pb",
+            protobuf,
+            block_height
+        )
+        .await;
+    
+        let block = res.unwrap().0.unwrap().unwrap().decode().expect("unable to decode block");  
+        block
+    }
 }
 
 #[update]

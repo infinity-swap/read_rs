@@ -2,7 +2,7 @@
   "canisters": {
     "read_rs": {
       "type": "custom",
-      "build": "cargo build --target wasm32-unknown-unknown --release",
+      "build": "./build.sh",
       "candid": "./read_rs.did",
       "wasm": "./read_rs_opt.wasm"
     }
